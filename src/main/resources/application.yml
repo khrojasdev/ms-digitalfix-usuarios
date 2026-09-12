@@ -1,6 +1,17 @@
 spring:
-  application:
-    name: ms-usuarios
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/XEPDB1 # Ajusta al host de tu BD si es distinto
+    username: my_user # Cambia por tus credenciales de Oracle
+    password: my_password
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
 management:
   endpoints:
     web:
