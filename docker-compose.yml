@@ -1,0 +1,15 @@
+services:
+  ms-usuarios:
+    build: .
+    container_name: ms-usuarios
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=${DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ./target/ms-usuarios-0.0.1-SNAPSHOT.jar

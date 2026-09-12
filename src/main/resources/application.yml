@@ -1,8 +1,11 @@
+server:
+  port: 8081
+
 spring:
   datasource:
-    url: jdbc:oracle:thin:@//localhost:1521/XEPDB1
-    username: my_user
-    password: my_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:oracle:thin:@//localhost:1521/XEPDB1}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
       maximum-pool-size: 10
@@ -13,7 +16,16 @@ spring:
     locations: classpath:db/migration
     clean-disabled: false
     clean-on-validation-error: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # ID DEL TENANT
+          jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:05e8b5a7-b9e0-40d2-9d95-1a1ee52e838a}/discovery/v2.0/keys
 
+logging:
+  level:
+    org.springframework.security: DEBUG
 management:
   endpoints:
     web:
