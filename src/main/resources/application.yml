@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: ms-usuarios
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
