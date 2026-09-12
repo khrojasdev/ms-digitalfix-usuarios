@@ -24,8 +24,14 @@ public class AppUserService {
     @Transactional
     public AppUser autoProvision(String azureOid, String email, String name) {
         Optional< AppUser > existingUser = appUserRepository.findByAzureOid(azureOid);
+
         if (existingUser.isPresent()) {
-            return existingUser.get();
+            AppUser user = existingUser.get();
+            // ¡Nueva validación HU-04.5!
+            if (!user.getActive()) {
+                throw new IllegalStateException("El usuario se encuentra inactivo. Acceso denegado.");
+            }
+            return user;
         }
 
         Company defaultCompany = companyRepository.findById(1L).orElseGet(() -> {
