@@ -1,5 +1,6 @@
 package com.digitalfix.msusuarios.controller;
 
+import com.digitalfix.msusuarios.dto.StatusUpdateDto;
 import com.digitalfix.msusuarios.service.AppUserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -8,6 +9,7 @@ import com.digitalfix.msusuarios.dto.UserProfileDto;
 import com.digitalfix.msusuarios.repository.AppUserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import java.util.Optional;
 
@@ -44,27 +46,50 @@ public class AppUserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity< UserProfileDto > login(@AuthenticationPrincipal Jwt jwt) {
-        // 1. Extraer los datos seguros directamente del token de Azure
+    public ResponseEntity loginUser(@AuthenticationPrincipal Jwt jwt) {
         String oid = jwt.getClaimAsString("oid");
         String name = jwt.getClaimAsString("name");
 
-        // Azure a veces guarda el correo en "preferred_username" o en "email"
         String email = jwt.getClaimAsString("preferred_username");
         if (email == null) {
             email = jwt.getClaimAsString("email");
         }
 
-        // 2. Llamar a tu regla de negocio (crea el usuario o devuelve el existente)
-        AppUser user = appUserService.autoProvision(oid, email, name);
+        // Extraemos el arreglo de roles desde Azure
+        List azureRoles = jwt.getClaimAsStringList("roles");
+        String assignedRole = "CLIENTE"; // Rol por defecto si Azure no envía ninguno
 
-        // 3. Convertir a DTO para responder
+        if (azureRoles != null && !azureRoles.isEmpty()) {
+            assignedRole = String.valueOf(azureRoles.get(0));
+        }
+
+        // Pasamos el role extraído a tu servicio actualizado
+        AppUser user = appUserService.autoProvision(oid, email, name, assignedRole);
+
         UserProfileDto dto = new UserProfileDto(
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
                 user.getCompany().getName(),
                 user.getActive()
+        );
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/{oid}/status")
+    public ResponseEntity updateUserStatus(
+            @PathVariable String oid,
+            @RequestBody StatusUpdateDto statusDto) {
+
+        AppUser updatedUser = appUserService.updateStatus(oid, statusDto.isActive());
+
+        UserProfileDto dto = new UserProfileDto(
+                updatedUser.getName(),
+                updatedUser.getEmail(),
+                updatedUser.getRole(),
+                updatedUser.getCompany().getName(),
+                updatedUser.getActive()
         );
 
         return ResponseEntity.ok(dto);

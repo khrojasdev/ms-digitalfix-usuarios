@@ -33,7 +33,7 @@ public class AppUserServiceTest {
             executorService.execute(() -> {
                 try {
                     // 10 hilos intentan registrar al mismo usuario exactamente al mismo tiempo
-                    AppUser user = appUserService.autoProvision(testOid, "test@empresa.com", "Usuario Test");
+                    AppUser user = appUserService.autoProvision("mock-oid", "mock@email.com", "Mock Name", "CLIENTE");
                     if (user != null && user.getId() != null) {
                         successfulReturns.incrementAndGet();
                     }
@@ -52,7 +52,7 @@ public class AppUserServiceTest {
     public void givenInactiveUser_whenAutoProvision_thenThrowsException() {
         // 1. Crear usuario y guardarlo activo
         String testOid = "oid-bloqueo-789";
-        appUserService.autoProvision(testOid, "bloqueado@test.com", "Usuario a Bloquear");
+        AppUser user = appUserService.autoProvision("mock-oid", "mock@email.com", "Mock Name", "CLIENTE");
 
         // 2. Buscarlo en BD y cambiar su estado a inactivo (simulando que un admin lo bloqueó)
         AppUser userToDeactivate = appUserRepository.findByAzureOid(testOid).get();
@@ -61,7 +61,7 @@ public class AppUserServiceTest {
 
         // 3. Intentar hacer autoprovisión de nuevo y verificar que lance la excepción
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> {
-            appUserService.autoProvision(testOid, "bloqueado@test.com", "Usuario a Bloquear");
+            appUserService.autoProvision("mock-oid", "mock@email.com", "Mock Name", "CLIENTE");
         });
     }
 }

@@ -22,12 +22,11 @@ public class AppUserService {
     }
 
     @Transactional
-    public AppUser autoProvision(String azureOid, String email, String name) {
+    public AppUser autoProvision(String azureOid, String email, String name, String role) {
         Optional< AppUser > existingUser = appUserRepository.findByAzureOid(azureOid);
 
         if (existingUser.isPresent()) {
             AppUser user = existingUser.get();
-            // ¡Nueva validación HU-04.5!
             if (!user.getActive()) {
                 throw new IllegalStateException("El usuario se encuentra inactivo. Acceso denegado.");
             }
@@ -45,6 +44,8 @@ public class AppUserService {
         newUser.setEmail(email);
         newUser.setName(name);
         newUser.setCompany(defaultCompany);
+        newUser.setRole(role); // <-- Asignamos el rol proveniente de Azure
+        newUser.setActive(true); // <-- Nos aseguramos de que inicie activo
 
         try {
             // saveAndFlush fuerza la escritura inmediata para gatillar el error de UNIQUE si hay colisión
@@ -53,5 +54,12 @@ public class AppUserService {
             // Si otro hilo lo creó fracciones de segundo antes, lo recuperamos
             return appUserRepository.findByAzureOid(azureOid).orElseThrow();
         }
+    }
+
+    public AppUser updateStatus(String oid, boolean active) {
+        AppUser user = appUserRepository.findByAzureOid(oid)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con OID: " + oid));
+        user.setActive(active);
+        return appUserRepository.save(user);
     }
 }
