@@ -19,7 +19,15 @@ public class WebSecurityConfig {
 
                 // Reglas de protección de rutas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health").permitAll()
+                        // Liberamos Actuator Y la interfaz de Swagger para acceso público
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
                         // Cualquier otra petición (como /api/users/) DEBE traer un token válido
                         .anyRequest().authenticated()
                 )

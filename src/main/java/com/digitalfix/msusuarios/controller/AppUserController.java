@@ -1,16 +1,15 @@
 package com.digitalfix.msusuarios.controller;
 
-import com.digitalfix.msusuarios.dto.StatusUpdateDto;
-import com.digitalfix.msusuarios.service.AppUserService;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import com.digitalfix.msusuarios.domain.AppUser;
+import com.digitalfix.msusuarios.dto.StatusUpdateDto;
 import com.digitalfix.msusuarios.dto.UserProfileDto;
 import com.digitalfix.msusuarios.repository.AppUserRepository;
+import com.digitalfix.msusuarios.service.AppUserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -25,9 +24,23 @@ public class AppUserController {
         this.appUserService = appUserService;
     }
 
+    @GetMapping
+    public ResponseEntity < List < UserProfileDto > > getAllUsers() {
+        List < UserProfileDto > users = appUserService.getAllUsers().stream()
+                .map(user -> new UserProfileDto(
+                        user.getName(),
+                        user.getEmail(),
+                        user.getRole(),
+                        user.getCompany().getName(),
+                        user.getActive()
+                ))
+                .toList();
+        return ResponseEntity.ok(users);
+    }
+
     @GetMapping("/{oid}")
-    public ResponseEntity< UserProfileDto > getUserByOid(@PathVariable String oid) {
-        Optional< AppUser > userOpt = appUserRepository.findByAzureOid(oid);
+    public ResponseEntity < UserProfileDto > getUserByOid(@PathVariable String oid) {
+        Optional < AppUser > userOpt = appUserRepository.findByAzureOid(oid);
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -46,7 +59,10 @@ public class AppUserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity loginUser(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity < UserProfileDto > loginUser() {
+        // Extraemos el JWT directamente del contexto de seguridad de Spring (Sin parámetros)
+        Jwt jwt = (Jwt) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         String oid = jwt.getClaimAsString("oid");
         String name = jwt.getClaimAsString("name");
 
@@ -55,15 +71,13 @@ public class AppUserController {
             email = jwt.getClaimAsString("email");
         }
 
-        // Extraemos el arreglo de roles desde Azure
-        List azureRoles = jwt.getClaimAsStringList("roles");
-        String assignedRole = "CLIENTE"; // Rol por defecto si Azure no envía ninguno
+        List < String > azureRoles = jwt.getClaimAsStringList("roles");
+        String assignedRole = "CLIENTE";
 
         if (azureRoles != null && !azureRoles.isEmpty()) {
             assignedRole = String.valueOf(azureRoles.get(0));
         }
 
-        // Pasamos el role extraído a tu servicio actualizado
         AppUser user = appUserService.autoProvision(oid, email, name, assignedRole);
 
         UserProfileDto dto = new UserProfileDto(
@@ -78,7 +92,7 @@ public class AppUserController {
     }
 
     @PutMapping("/{oid}/status")
-    public ResponseEntity updateUserStatus(
+    public ResponseEntity < UserProfileDto > updateUserStatus(
             @PathVariable String oid,
             @RequestBody StatusUpdateDto statusDto) {
 
@@ -93,5 +107,11 @@ public class AppUserController {
         );
 
         return ResponseEntity.ok(dto);
+    }
+
+    @DeleteMapping("/{oid}")
+    public ResponseEntity < Void > deleteUser(@PathVariable String oid) {
+        appUserService.deleteUser(oid);
+        return ResponseEntity.noContent().build();
     }
 }

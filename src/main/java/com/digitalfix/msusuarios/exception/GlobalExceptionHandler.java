@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.digitalfix.msusuarios.controller")
 public class GlobalExceptionHandler {
 
     // Captura los RuntimeException (como el que lanzamos cuando no se encuentra un usuario)
@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
     // Captura cualquier otro error inesperado (Error 500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity handleGlobalException(Exception ex, HttpServletRequest request) {
-
+        ex.printStackTrace();
         ErrorResponseDto error = new ErrorResponseDto(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
