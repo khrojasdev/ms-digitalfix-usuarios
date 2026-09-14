@@ -31,7 +31,7 @@ public class AppUserController {
                         user.getName(),
                         user.getEmail(),
                         user.getRole(),
-                        user.getCompany().getName(),
+                        user.getCompany().getId(),
                         user.getActive()
                 ))
                 .toList();
@@ -51,7 +51,7 @@ public class AppUserController {
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getCompany().getName(),
+                user.getCompany().getId(),
                 user.getActive()
         );
 
@@ -59,8 +59,7 @@ public class AppUserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity < UserProfileDto > loginUser() {
-        // Extraemos el JWT directamente del contexto de seguridad de Spring (Sin parámetros)
+    public ResponseEntity loginUser() {
         Jwt jwt = (Jwt) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         String oid = jwt.getClaimAsString("oid");
@@ -71,7 +70,7 @@ public class AppUserController {
             email = jwt.getClaimAsString("email");
         }
 
-        List < String > azureRoles = jwt.getClaimAsStringList("roles");
+        List azureRoles = jwt.getClaimAsStringList("roles");
         String assignedRole = "CLIENTE";
 
         if (azureRoles != null && !azureRoles.isEmpty()) {
@@ -79,12 +78,11 @@ public class AppUserController {
         }
 
         AppUser user = appUserService.autoProvision(oid, email, name, assignedRole);
-
         UserProfileDto dto = new UserProfileDto(
                 user.getName(),
                 user.getEmail(),
                 user.getRole(),
-                user.getCompany().getName(),
+                user.getCompany().getId(),
                 user.getActive()
         );
 
@@ -102,7 +100,7 @@ public class AppUserController {
                 updatedUser.getName(),
                 updatedUser.getEmail(),
                 updatedUser.getRole(),
-                updatedUser.getCompany().getName(),
+                updatedUser.getCompany().getId(),
                 updatedUser.getActive()
         );
 
