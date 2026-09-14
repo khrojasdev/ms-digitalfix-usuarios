@@ -26,8 +26,11 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    clean-disabled: false
-    clean-on-validation-error: true
+    # clean borra TODAS las tablas del esquema. Con clean-on-validation-error
+    # activo, cualquier desajuste entre el historial y los archivos —por
+    # ejemplo, una migracion que ya no esta en el repositorio— vacia
+    # DFX_USUARIOS al arrancar y se lleva por delante los datos de todos.
+    clean-disabled: true
   security:
     oauth2:
       resourceserver:
