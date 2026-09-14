@@ -5,12 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class UserProfileDto {
     private String name;
     private String email;
     private String role;
-    private String companyName;
+    private Long companyId;
     private Boolean active;
 }
