@@ -2,6 +2,7 @@ package com.digitalfix.msusuarios.service;
 
 import com.digitalfix.msusuarios.domain.AppUser;
 import com.digitalfix.msusuarios.domain.Company;
+import com.digitalfix.msusuarios.messaging.UsuarioEventoPublisher;
 import com.digitalfix.msusuarios.repository.AppUserRepository;
 import com.digitalfix.msusuarios.repository.CompanyRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,10 +17,13 @@ public class AppUserService {
 
     private final AppUserRepository appUserRepository;
     private final CompanyRepository companyRepository;
+    private final UsuarioEventoPublisher eventos;
 
-    public AppUserService(AppUserRepository appUserRepository, CompanyRepository companyRepository) {
+    public AppUserService(AppUserRepository appUserRepository, CompanyRepository companyRepository,
+                          UsuarioEventoPublisher eventos) {
         this.appUserRepository = appUserRepository;
         this.companyRepository = companyRepository;
+        this.eventos = eventos;
     }
 
     @Transactional
@@ -49,8 +53,11 @@ public class AppUserService {
         newUser.setActive(true);
 
         try {
-            return appUserRepository.saveAndFlush(newUser);
+            AppUser creado = appUserRepository.saveAndFlush(newUser);
+            eventos.publicarCreado(creado);
+            return creado;
         } catch (DataIntegrityViolationException e) {
+            // Inserción concurrente: el usuario ya existía, no es una creación nueva.
             return appUserRepository.findByAzureOid(azureOid).orElseThrow();
         }
     }
@@ -63,7 +70,9 @@ public class AppUserService {
         AppUser user = appUserRepository.findByAzureOid(oid)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con OID: " + oid));
         user.setActive(active);
-        return appUserRepository.save(user);
+        AppUser actualizado = appUserRepository.save(user);
+        eventos.publicarCambioEstado(actualizado);
+        return actualizado;
     }
 
     @Transactional
