@@ -42,6 +42,10 @@ public class UsuarioEventoPublisher {
         publicar("CREADO", usuario);
     }
 
+    public void publicarCambioRol(AppUser usuario) {
+        publicar("ROL_CAMBIADO", usuario);
+    }
+
     public void publicarCambioEstado(AppUser usuario) {
         publicar(Boolean.TRUE.equals(usuario.getActive()) ? "ACTIVADO" : "DESACTIVADO", usuario);
     }

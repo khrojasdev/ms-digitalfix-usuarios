@@ -52,7 +52,7 @@ public class AppUserServiceTest {
     public void givenInactiveUser_whenAutoProvision_thenThrowsException() {
         // 1. Crear usuario y guardarlo activo
         String testOid = "oid-bloqueo-789";
-        AppUser user = appUserService.autoProvision("mock-oid", "mock@email.com", "Mock Name", "CLIENTE");
+        AppUser user = appUserService.autoProvision(testOid, "mock@email.com", "Mock Name", "CLIENTE");
 
         // 2. Buscarlo en BD y cambiar su estado a inactivo (simulando que un admin lo bloqueó)
         AppUser userToDeactivate = appUserRepository.findByAzureOid(testOid).get();
@@ -61,7 +61,7 @@ public class AppUserServiceTest {
 
         // 3. Intentar hacer autoprovisión de nuevo y verificar que lance la excepción
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> {
-            appUserService.autoProvision("mock-oid", "mock@email.com", "Mock Name", "CLIENTE");
+            appUserService.autoProvision(testOid, "mock@email.com", "Mock Name", "CLIENTE");
         });
     }
 }

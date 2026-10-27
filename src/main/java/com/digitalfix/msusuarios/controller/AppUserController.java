@@ -60,11 +60,13 @@ public class AppUserController {
             email = jwt.getClaimAsString("email");
         }
 
+        // El rol del tenant (Entra ID). Sin rol en el token se envia null: un
+        // usuario nuevo queda como CLIENTE y uno existente conserva el suyo.
         List azureRoles = jwt.getClaimAsStringList("roles");
-        String assignedRole = "CLIENTE";
+        String assignedRole = null;
 
         if (azureRoles != null && !azureRoles.isEmpty()) {
-            assignedRole = String.valueOf(azureRoles.get(0));
+            assignedRole = String.valueOf(azureRoles.get(0)).trim().toUpperCase();
         }
 
         AppUser user = appUserService.autoProvision(oid, email, name, assignedRole);
