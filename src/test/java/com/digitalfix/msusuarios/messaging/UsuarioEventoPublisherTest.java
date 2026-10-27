@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 class UsuarioEventoPublisherTest {
 
     private UsuarioEventoPublisher nuevoPublisher(RabbitTemplate template) {
-        UsuarioEventoPublisher publisher = new UsuarioEventoPublisher(template, new ObjectMapper());
+        UsuarioEventoPublisher publisher = new UsuarioEventoPublisher(template, new ObjectMapper().findAndRegisterModules());
         ReflectionTestUtils.setField(publisher, "exchange", "usuarios.negocio.exchange");
         ReflectionTestUtils.setField(publisher, "routingKeyBase", "usuarios.eventos");
         return publisher;
@@ -51,5 +51,18 @@ class UsuarioEventoPublisherTest {
         publisher.publicarCambioEstado(usuario(false));
 
         verify(template, times(1)).convertAndSend(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void publicaAlCambiarRol() {
+        RabbitTemplate template = mock(RabbitTemplate.class);
+        UsuarioEventoPublisher publisher = nuevoPublisher(template);
+
+        publisher.publicarCambioRol(usuario(true));
+
+        verify(template, times(1)).convertAndSend(
+                org.mockito.ArgumentMatchers.eq("usuarios.negocio.exchange"),
+                org.mockito.ArgumentMatchers.eq("usuarios.eventos.rol_cambiado"),
+                anyString());
     }
 }
